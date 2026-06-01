@@ -27,7 +27,7 @@ conda activate /hdd0/susbus/tools/conda_envs/snakemake
 # config/config.yaml
 input_dir: "/path/to/your/fastq_folder"   # flat folder with *_R1_001.fastq.gz pairs
 my_experiment: "my_run"
-analysis_method: "both"                   # "blast", "kraken2", or "both"
+analysis_method: "both"                   # Tapirs only: "blast", "kraken2", or "both" (DADA2/SINTAX always runs all three databases)
 ```
 
 Update the four database paths (blast_db, kraken2_db, taxdump, dada2_ref_db).
