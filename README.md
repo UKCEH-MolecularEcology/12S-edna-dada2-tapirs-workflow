@@ -11,6 +11,16 @@ Merged Snakemake workflow that runs the **Tapirs** metabarcoding pipeline and th
 
 ## Quick start
 
+### 0. Install Snakemake
+
+The workflow requires Snakemake 7.32.4. Install it into a dedicated conda environment:
+
+```bash
+conda create -p /hdd0/susbus/tools/conda_envs/snakemake -c conda-forge -c bioconda \
+  snakemake=7.32.4 -y
+conda activate /hdd0/susbus/tools/conda_envs/snakemake
+```
+
 ### 1. Edit the config
 
 ```yaml
