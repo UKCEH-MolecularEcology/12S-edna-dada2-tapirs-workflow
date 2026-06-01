@@ -27,14 +27,17 @@ Update the four database paths (blast_db, kraken2_db, taxdump, dada2_ref_db).
 ```bash
 cd 12S-edna-dada2-tapirs-workflow
 
+# Activate snakemake (or use full path below)
+SNAKEMAKE=/hdd0/susbus/tools/conda_envs/snakemake/bin/snakemake
+
 # Dry run
-snakemake --use-conda --cores 1 -n
+$SNAKEMAKE --use-conda --cores 1 -n
 
 # Full run
-snakemake --use-conda --cores <N>
+$SNAKEMAKE --use-conda --cores <N>
 
 # HPC (SLURM example)
-snakemake --use-conda --cores <N> \
+$SNAKEMAKE --use-conda --cores <N> \
   --cluster "sbatch -c {threads} --mem=32G -t 12:00:00" \
   --jobs 50
 ```
