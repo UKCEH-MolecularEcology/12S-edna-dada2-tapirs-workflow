@@ -1,0 +1,22 @@
+name: dada2_sintax
+
+channels:
+  - conda-forge
+  - bioconda
+
+dependencies:
+  - r-base>=4.2
+  - bioconductor-dada2
+  - bioconductor-biostrings
+  - r-tibble
+  - r-readr
+  - r-dplyr
+  - r-stringr
+  - r-tidyr
+  - r-purrr
+
+  # primer trimming
+  - cutadapt
+
+  # SINTAX taxonomy (free drop-in replacement for usearch -sintax)
+  - vsearch

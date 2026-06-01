@@ -1,0 +1,113 @@
+# ==============================================================================
+# 12S-EDNA-DADA2-TAPIRS-WORKFLOW
+# Runs Tapirs (fastp/vsearch/BLAST/Kraken2) and DADA2/SINTAX/blank-cleanup
+# simultaneously from a single input directory of paired fastq.gz files.
+#
+# Usage (from workflow root):
+#   snakemake --use-conda --cores <N>
+#
+# Outputs:
+#   results/tapirs/   — Tapirs OTU tables (BLAST and/or Kraken2)
+#   results/dada2/    — DADA2 ASVs, SINTAX taxonomy, blank-cleaned matrices
+# ==============================================================================
+
+configfile: "config/config.yaml"
+
+import os
+import glob
+import pandas as pd
+
+# ------------------------------------------------------------------------------
+# DERIVE LIBRARY NAME AND INPUT_DATA FROM input_dir
+# Tapirs expects files at: {input_data}/{LIBRARY}/{SAMPLE}_R1_001.fastq.gz
+# We treat the folder itself as the library, so input_data = parent dir.
+# ------------------------------------------------------------------------------
+
+_input_dir   = config["input_dir"].rstrip("/")
+library_name = os.path.basename(_input_dir)
+input_data   = os.path.dirname(_input_dir)
+
+# Expose to rules that reference config['input_data']
+config["input_data"] = input_data
+
+# ------------------------------------------------------------------------------
+# DISCOVER SAMPLES FROM INPUT DIRECTORY
+# ------------------------------------------------------------------------------
+
+_r1_files = sorted(glob.glob(os.path.join(_input_dir, "*_R1_001.fastq.gz")))
+if not _r1_files:
+    _r1_files = sorted(glob.glob(os.path.join(_input_dir, "*_R1_001.fastq")))
+
+if not _r1_files:
+    raise ValueError(f"No R1 FASTQ files found in {_input_dir}")
+
+SAMPLES = [
+    os.path.basename(f)
+        .replace("_R1_001.fastq.gz", "")
+        .replace("_R1_001.fastq", "")
+    for f in _r1_files
+]
+
+LIBRARIES   = [library_name] * len(SAMPLES)
+real_combos = [f"{library_name}/{s}" for s in SAMPLES]
+
+# ------------------------------------------------------------------------------
+# AUTO-GENERATE samples.tsv FOR TAPIRS
+# ------------------------------------------------------------------------------
+
+os.makedirs("config", exist_ok=True)
+_tsv_path = config.get("samples", "config/samples.tsv")
+with open(_tsv_path, "w") as _fh:
+    for s in SAMPLES:
+        _fh.write(f"{library_name}\t{s}\n")
+
+# ------------------------------------------------------------------------------
+# DEFINE FINAL TARGETS
+# ------------------------------------------------------------------------------
+
+# --- Tapirs ---
+_exp      = config["my_experiment"]
+_id       = str(config["MLCA_identity"])
+_method   = config["cluster_method"]
+_conf     = str(config["kraken2_confidence"]).split(".")[1]
+
+_tapirs_blast        = f"results/tapirs/{_exp}_blast{_id}_{_method}.tsv"
+_tapirs_blast_full   = f"results/tapirs/{_exp}_blast{_id}_{_method}_full_lineage.tsv"
+_tapirs_kraken2      = f"results/tapirs/{_exp}_kraken2_conf{_conf}_{_method}.tsv"
+_tapirs_kraken2_full = f"results/tapirs/{_exp}_kraken2_conf{_conf}_{_method}_full_lineage.tsv"
+
+tapirs_targets = []
+if config["analysis_method"] in ("blast", "both"):
+    tapirs_targets += [_tapirs_blast, _tapirs_blast_full]
+if config["analysis_method"] in ("kraken2", "both"):
+    tapirs_targets += [_tapirs_kraken2, _tapirs_kraken2_full]
+
+# --- DADA2 ---
+_d2 = "results/dada2"
+dada2_targets = [
+    f"{_d2}/ncl_cleaned_labLOD.csv",
+    f"{_d2}/ncl_cleaned_siteLOD.csv",
+    f"{_d2}/ncl_cleaned_bothLOD.csv",
+]
+
+rule all:
+    input:
+        tapirs_targets + dada2_targets
+
+# ------------------------------------------------------------------------------
+# INCLUDE RULE FILES
+# ------------------------------------------------------------------------------
+
+include: "rules/tapirs_qc.smk"
+include: "rules/tapirs_vsearch.smk"
+include: "rules/tapirs_lca.smk"
+include: "rules/dada2_cutadapt.smk"
+include: "rules/dada2_asv.smk"
+include: "rules/dada2_sintax.smk"
+include: "rules/dada2_cleanup.smk"
+
+if config["analysis_method"] in ("blast", "both"):
+    include: "rules/tapirs_blast.smk"
+
+if config["analysis_method"] in ("kraken2", "both"):
+    include: "rules/tapirs_kraken2.smk"

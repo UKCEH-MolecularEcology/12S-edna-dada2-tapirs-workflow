@@ -1,0 +1,24 @@
+name: tapirs
+
+channels:
+  - conda-forge
+  - bioconda
+
+dependencies:
+  - python>=3.9
+  - biopython
+  - pandas
+  - numpy
+  - wget
+
+  # sequence processing
+  - fastp
+  - vsearch
+  - seqkit
+
+  # taxonomic ID
+  - blast>=2.9
+  - kraken2
+
+  # output formats
+  - biom-format
