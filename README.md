@@ -25,22 +25,30 @@ Update the four database paths (blast_db, kraken2_db, taxdump, dada2_ref_db).
 ### 2. Run
 
 ```bash
-cd 12S-edna-dada2-tapirs-workflow
-
-# Activate snakemake (or use full path below)
-SNAKEMAKE=/hdd0/susbus/tools/conda_envs/snakemake/bin/snakemake
+cd /prj/DECODE/12S_pipeline/12S-edna-dada2-tapirs-workflow
 
 # Dry run
-$SNAKEMAKE --use-conda --cores 1 -n
+snakemake -s workflow/Snakefile --use-conda --cores 64 \
+  --conda-prefix /prj/DECODE/conda_envs \
+  --conda-frontend conda \
+  -rpk -n
 
 # Full run
-$SNAKEMAKE --use-conda --cores <N>
+snakemake -s workflow/Snakefile --use-conda --cores 64 \
+  --conda-prefix /prj/DECODE/conda_envs \
+  --conda-frontend conda \
+  -rpk
 
 # HPC (SLURM example)
-$SNAKEMAKE --use-conda --cores <N> \
+snakemake -s workflow/Snakefile --use-conda --cores 64 \
+  --conda-prefix /prj/DECODE/conda_envs \
+  --conda-frontend conda \
   --cluster "sbatch -c {threads} --mem=32G -t 12:00:00" \
-  --jobs 50
+  --jobs 50 -rpk
 ```
+
+> **Note:** `--conda-frontend conda` is required to avoid a mamba/conda version conflict.
+> Conda environments are built on first run into `/prj/DECODE/conda_envs/` and reused thereafter.
 
 Conda environments are created automatically on first run inside `.snakemake/conda/`.
 
