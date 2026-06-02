@@ -90,9 +90,15 @@ dada2_targets = [
     f"{_d2}/ncl_cleaned_bothLOD.csv",
 ]
 
+# --- QC ---
+qc_targets = [
+    "results/qc/multiqc_report.html",
+    "results/read_counts_summary.tsv",
+]
+
 rule all:
     input:
-        tapirs_targets + dada2_targets
+        tapirs_targets + dada2_targets + qc_targets
 
 # ------------------------------------------------------------------------------
 # INCLUDE RULE FILES
@@ -105,6 +111,7 @@ include: "rules/dada2_cutadapt.smk"
 include: "rules/dada2_asv.smk"
 include: "rules/dada2_sintax.smk"
 include: "rules/dada2_cleanup.smk"
+include: "rules/qc_reports.smk"
 
 if config["analysis_method"] in ("blast", "both"):
     include: "rules/tapirs_blast.smk"
