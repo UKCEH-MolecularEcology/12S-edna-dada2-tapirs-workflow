@@ -107,3 +107,5 @@ kraken2_threads: 8
 # -----------------------------------------------
 sintax_cutoff: 0.7
 dada2_threads: 10
+dada2_maxEE_F: 2
+dada2_maxEE_R: 5

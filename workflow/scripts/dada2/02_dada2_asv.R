@@ -44,7 +44,7 @@ out <- filterAndTrim(
   fnRs, filtRs,
   truncLen  = c(75, 75),
   maxN      = 0,
-  maxEE     = c(2, 2),
+  maxEE     = c(as.numeric(Sys.getenv("SM_MAXEE_F", "2")), as.numeric(Sys.getenv("SM_MAXEE_R", "5"))),
   truncQ    = 2,
   rm.phix   = TRUE,
   compress  = TRUE,
