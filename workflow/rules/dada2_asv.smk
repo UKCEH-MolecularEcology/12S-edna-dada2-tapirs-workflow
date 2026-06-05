@@ -7,9 +7,11 @@ rule dada2_asv:
     input:
         "results/dada2/.cutadapt.done"
     output:
-        fasta  = "results/dada2/asvs.nochim.fasta",
-        rds    = "results/dada2/seqtab_asv.rds",
-        lookup = "results/dada2/asv_lookup.tsv"
+        fasta      = "results/dada2/asvs.nochim.fasta",
+        rds        = "results/dada2/seqtab_asv.rds",
+        lookup     = "results/dada2/asv_lookup.tsv",
+        seqtab_csv = "results/dada2/seqtab_asv.csv",
+        filtering  = "results/dada2/filtering_summary.csv"
     params:
         results_dir = "results/dada2",
         ref_db_dir  = config["dada2_ref_db"]
