@@ -13,7 +13,8 @@ rule dada2_cutadapt:
     params:
         input_dir   = config["input_dir"],
         results_dir = _d2_results,
-        ref_db_dir  = config["dada2_ref_db"]
+        ref_db_dir  = config["dada2_ref_db"],
+        phusion_tag = config.get("phusion_tag", "no")
     threads:
         config.get("dada2_threads", 10)
     conda:
@@ -24,5 +25,6 @@ rule dada2_cutadapt:
         SM_RESULTS_DIR="{params.results_dir}" \
         SM_REF_DB_DIR="{params.ref_db_dir}" \
         SM_THREADS="{threads}" \
+        SM_PHUSION_TAG="{params.phusion_tag}" \
         Rscript {workflow.basedir}/scripts/dada2/01_cutadapt.R
         """

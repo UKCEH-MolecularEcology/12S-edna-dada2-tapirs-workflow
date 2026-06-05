@@ -12,8 +12,16 @@
 # =========================
 
 # Primers (12S Riaz V5 region)
-FWD <- "ACTGGGATTAGATACCCC"
+FWD_base <- "ACTGGGATTAGATACCCC"
 REV <- "TAGAACAGGCTCCTCTAG"
+
+# If Phusion tag was used, first base of FWD primer is G in the reads, not A
+phusion_tag <- Sys.getenv("SM_PHUSION_TAG", unset = "no")
+FWD <- if (tolower(phusion_tag) == "yes") {
+  paste0("G", substring(FWD_base, 2))
+} else {
+  FWD_base
+}
 
 # Threads
 threads <- as.integer(
