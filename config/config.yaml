@@ -105,10 +105,10 @@ kraken2_threads: 8
 # -----------------------------------------------
 # DADA2 PARAMETERS
 # -----------------------------------------------
-# Set to "yes" if a Phusion tag was used in library prep.
+# Set to "yes" if a Fusion tag was used in library prep.
 # This changes the first base of the forward primer from A to G (ACTGG... -> GCTGG...)
 # to match the sequence as it appears in the reads.
-phusion_tag: "yes"
+fusion_tag: "yes"
 
 sintax_cutoff: 0.7
 dada2_threads: 48
