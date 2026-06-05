@@ -141,4 +141,18 @@ write.csv(
 )
 saveRDS(seqtab_asv, file.path(results_dir, "seqtab_asv.rds"))
 
+# -------------------------
+# Read tracking table
+# -------------------------
+getN <- function(x) sum(getUniques(x))
+track <- cbind(
+  out[sample.names, ],
+  sapply(dadaFs,  getN),
+  sapply(dadaRs,  getN),
+  sapply(mergers, getN),
+  rowSums(seqtab.nochim)
+)
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+write.csv(track, file.path(results_dir, "dada2_read_tracking.csv"))
+
 cat("DADA2 complete\n")
