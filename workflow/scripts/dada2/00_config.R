@@ -15,10 +15,10 @@
 FWD_base <- "ACTGGGATTAGATACCCC"
 REV <- "TAGAACAGGCTCCTCTAG"
 
-# If Fusion tag was used, first base of FWD primer is G in the reads, not A
-fusion_tag <- Sys.getenv("SM_PHUSION_TAG", unset = "no")
+# If fusion tag was used, first base of FWD primer is A or G (degenerate R)
+fusion_tag <- Sys.getenv("SM_FUSION_TAG", unset = "no")
 FWD <- if (tolower(fusion_tag) == "yes") {
-  paste0("G", substring(FWD_base, 2))
+  paste0("R", substring(FWD_base, 2))
 } else {
   FWD_base
 }
