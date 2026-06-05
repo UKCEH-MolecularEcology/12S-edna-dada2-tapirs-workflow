@@ -1,7 +1,11 @@
-results/
+results*/
 config/samples.tsv
 .snakemake/
 *.log
+*.tmp
 __pycache__/
+*.pyc
 .Rhistory
 *.Rdata
+*.rds
+*.RData
