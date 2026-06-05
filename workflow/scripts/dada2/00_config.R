@@ -12,7 +12,7 @@
 # =========================
 
 # Primers (12S Riaz V5 region)
-FWD <- "RCTGGGATTAGATACCCC"
+FWD <- "ACTGGGATTAGATACCCC"
 REV <- "TAGAACAGGCTCCTCTAG"
 
 # Threads
