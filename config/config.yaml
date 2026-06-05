@@ -107,8 +107,12 @@ kraken2_threads: 8
 # -----------------------------------------------
 # Set to "yes" if a Fusion tag was used in library prep.
 # This changes the first base of the forward primer from A to G (ACTGG... -> GCTGG...)
-# to match the sequence as it appears in the reads.
+# to match the sequence as it appears in the reads (only applies when trim_left: 0).
 fusion_tag: "yes"
+
+# Number of bases to trim from the 5' end of each read (= primer length).
+# Set to 0 to use cutadapt primer detection instead of fixed trimming.
+trim_left: 18
 
 sintax_cutoff: 0.7
 dada2_threads: 48
