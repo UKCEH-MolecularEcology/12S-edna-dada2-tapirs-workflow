@@ -10,9 +10,12 @@ rule dada2_asv:
         fasta      = "results/dada2/asvs.nochim.fasta",
         rds        = "results/dada2/seqtab_asv.rds",
         lookup     = "results/dada2/asv_lookup.tsv",
-        seqtab_csv = "results/dada2/seqtab_asv.csv",
-        filtering  = "results/dada2/filtering_summary.csv",
-        tracking   = "results/dada2/dada2_read_tracking.csv"
+        seqtab_csv    = "results/dada2/seqtab_asv.csv",
+        filtering     = "results/dada2/filtering_summary.csv",
+        tracking      = "results/dada2/dada2_read_tracking.csv",
+        seqtab_nochim = "results/dada2/seqtab_nochim.rds",
+        errF          = "results/dada2/errF.rds",
+        errR          = "results/dada2/errR.rds"
     params:
         results_dir = "results/dada2",
         ref_db_dir  = config["dada2_ref_db"],

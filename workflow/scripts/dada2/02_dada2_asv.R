@@ -48,7 +48,7 @@ out <- filterAndTrim(
   truncQ    = 2,
   rm.phix   = TRUE,
   compress  = TRUE,
-  multithread = TRUE
+  multithread = threads
 )
 
 write.csv(out, file.path(results_dir, "filtering_summary.csv"))
@@ -62,6 +62,7 @@ if (sum(!passed) > 0) {
   cat("WARNING:", sum(!passed), "sample(s) had no reads after filtering and are excluded.\n")
 }
 
+fnFs_passed  <- fnFs[passed]
 sample.names <- sample.names[passed]
 filtFs       <- filtFs[passed]
 filtRs       <- filtRs[passed]
@@ -70,8 +71,8 @@ filtRs       <- filtRs[passed]
 # Learn errors
 # -------------------------
 cat("Learning error rates\n")
-errF <- learnErrors(filtFs, multithread = TRUE)
-errR <- learnErrors(filtRs, multithread = TRUE)
+errF <- learnErrors(filtFs, multithread = threads)
+errR <- learnErrors(filtRs, multithread = threads)
 
 # -------------------------
 # Dereplicate
@@ -87,8 +88,8 @@ names(derepRs) <- sample.names
 # DADA2 denoising
 # -------------------------
 cat("Running dada\n")
-dadaFs <- dada(derepFs, err = errF, multithread = TRUE)
-dadaRs <- dada(derepRs, err = errR, multithread = TRUE)
+dadaFs <- dada(derepFs, err = errF, multithread = threads)
+dadaRs <- dada(derepRs, err = errR, multithread = threads)
 
 # -------------------------
 # Merge pairs
@@ -107,7 +108,7 @@ cat("Removing chimeras\n")
 seqtab.nochim <- removeBimeraDenovo(
   seqtab,
   method      = "consensus",
-  multithread = TRUE,
+  multithread = threads,
   verbose     = TRUE
 )
 write.csv(seqtab.nochim, file.path(results_dir, "seqtab_nochim.csv"))
@@ -139,20 +140,24 @@ write.csv(
   file.path(results_dir, "seqtab_asv_transposed.csv"),
   row.names = FALSE
 )
-saveRDS(seqtab_asv, file.path(results_dir, "seqtab_asv.rds"))
+saveRDS(seqtab_asv,    file.path(results_dir, "seqtab_asv.rds"))
+saveRDS(seqtab.nochim, file.path(results_dir, "seqtab_nochim.rds"))
+saveRDS(errF,          file.path(results_dir, "errF.rds"))
+saveRDS(errR,          file.path(results_dir, "errR.rds"))
 
 # -------------------------
 # Read tracking table
 # -------------------------
 getN <- function(x) sum(getUniques(x))
 track <- cbind(
-  out[sample.names, ],
+  out[fnFs_passed, , drop = FALSE],
   sapply(dadaFs,  getN),
   sapply(dadaRs,  getN),
   sapply(mergers, getN),
   rowSums(seqtab.nochim)
 )
 colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track) <- sample.names
 write.csv(track, file.path(results_dir, "dada2_read_tracking.csv"))
 
 cat("DADA2 complete\n")
