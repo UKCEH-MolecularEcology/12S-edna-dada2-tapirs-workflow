@@ -115,6 +115,13 @@ fusion_tag: "yes"
 trim_left: 18   # set this to 0 if cutadapt is to be used
 
 sintax_cutoff: 0.7
+# Names must match db_name entries in workflow/scripts/dada2/00_config.R
+sintax_databases:
+  - INBO
+  - MIDORI
+  - CLARE
+# Threads per SINTAX job; lower than dada2_threads to allow parallel db runs
+sintax_threads: 16
 dada2_threads: 64
 dada2_maxEE_F: 2
 dada2_maxEE_R: 2

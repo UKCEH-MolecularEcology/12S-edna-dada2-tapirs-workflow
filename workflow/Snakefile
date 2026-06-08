@@ -94,6 +94,8 @@ dada2_targets = [
     f"{_d2}/ncl_cleaned_labLOD.csv",
     f"{_d2}/ncl_cleaned_siteLOD.csv",
     f"{_d2}/ncl_cleaned_bothLOD.csv",
+    f"{_d2}/asv_taxonomy_compare.tsv",
+    f"{_d2}/sintax_database_summary.tsv",
 ]
 
 # --- QC ---
