@@ -125,7 +125,7 @@ write.csv(seqtab.nochim, file.path(results_dir, "seqtab_nochim.csv"))
 # -------------------------
 # Export ASVs
 # -------------------------
-ts("STEP 6/6: Exporting ASVs —", length(asv_seqs), "sequences after chimera removal")
+ts("STEP 6/6: Exporting ASVs —", ncol(seqtab.nochim), "sequences after chimera removal")
 asv_seqs <- colnames(seqtab.nochim)
 asv_ids  <- paste0("ASV", seq_along(asv_seqs))
 
