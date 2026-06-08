@@ -112,7 +112,8 @@ make_species_abundance <- function(parsed_df, seqtab_asv, out_file) {
   keep_asv <- tax_map$ASV[!is.na(tax_map$species)]
   if (length(keep_asv) == 0) {
     warning("No species assignments found for ", out_file)
-    return(NULL)
+    write.csv(data.frame(sample = rownames(seqtab_asv)), out_file, row.names = FALSE)
+    return(invisible(NULL))
   }
   mat  <- seqtab_asv[, keep_asv, drop = FALSE]
   sp   <- tax_map$species[match(colnames(mat), tax_map$ASV)]
