@@ -34,9 +34,15 @@ config["input_data"] = input_data
 # DISCOVER SAMPLES FROM INPUT DIRECTORY
 # ------------------------------------------------------------------------------
 
-_r1_files = sorted(glob.glob(os.path.join(_input_dir, "*_R1_001.fastq.gz")))
+_r1_files = sorted([
+    f for f in glob.glob(os.path.join(_input_dir, "*_R1_001.fastq.gz"))
+    if not os.path.basename(f).startswith("Undetermined")
+])
 if not _r1_files:
-    _r1_files = sorted(glob.glob(os.path.join(_input_dir, "*_R1_001.fastq")))
+    _r1_files = sorted([
+        f for f in glob.glob(os.path.join(_input_dir, "*_R1_001.fastq"))
+        if not os.path.basename(f).startswith("Undetermined")
+    ])
 
 if not _r1_files:
     raise ValueError(f"No R1 FASTQ files found in {_input_dir}")
