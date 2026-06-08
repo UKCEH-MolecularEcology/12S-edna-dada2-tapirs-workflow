@@ -1,4 +1,5 @@
 results*/
+logs/
 config/samples.tsv
 .snakemake/
 *.log
