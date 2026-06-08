@@ -15,6 +15,8 @@ rule fastp_trim_reads:
         failed     = "results/tapirs/02_trimmed/{LIBRARIES}/{SAMPLES}.trimmed.failed.fastq",
         json       = "results/tapirs/02_trimmed/fastp_trimmed_reports/{LIBRARIES}/{SAMPLES}.fastp.json",
         html       = "results/tapirs/02_trimmed/fastp_trimmed_reports/{LIBRARIES}/{SAMPLES}.fastp.html"
+    log:
+        "logs/fastp_trim/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
@@ -44,7 +46,8 @@ rule fastp_trim_reads:
         --trim_front2 {config[FASTP_trim_front2]} \
         --overlap_diff_percent_limit {config[FASTP_diff_percent_limit]} \
         --max_len1 {config[FASTP_max_len1]} \
-        --max_len2 {config[FASTP_max_len2]}"
+        --max_len2 {config[FASTP_max_len2]} \
+        > {log} 2>&1"
 
 
 rule fastp_merge_reads:
@@ -57,6 +60,8 @@ rule fastp_merge_reads:
         R2unmerged = "results/tapirs/03_merged/{LIBRARIES}/{SAMPLES}.R2.unmerged.fastq",
         json      = "results/tapirs/03_merged/fastp_merged_reports/{LIBRARIES}/{SAMPLES}.merged.fastp.json",
         html      = "results/tapirs/03_merged/fastp_merged_reports/{LIBRARIES}/{SAMPLES}.merged.fastp.html"
+    log:
+        "logs/fastp_merge/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
@@ -76,7 +81,8 @@ rule fastp_merge_reads:
         --length_required {config[FASTP_len_required]} \
         -j {output.json} \
         -h {output.html} \
-        --correction"
+        --correction \
+        > {log} 2>&1"
 
 
 rule merge_forward_reads:
@@ -99,7 +105,9 @@ rule seqkit_fq2fa:
         fq = "results/tapirs/04_forward_merged/{LIBRARIES}/{SAMPLES}.forward.merged.fastq"
     output:
         fa = "results/tapirs/05_fasta/{LIBRARIES}/{SAMPLES}.fasta"
+    log:
+        "logs/seqkit_fq2fa/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
-        "seqkit fq2fa {input.fq} -o {output.fa}"
+        "seqkit fq2fa {input.fq} -o {output.fa} > {log} 2>&1"

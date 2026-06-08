@@ -18,6 +18,8 @@ rule dada2_sintax:
         cutoff      = config.get("sintax_cutoff", 0.7)
     threads:
         config.get("dada2_threads", 10)
+    log:
+        "logs/dada2_sintax.log"
     conda:
         "../envs/dada2.yaml"
     shell:
@@ -26,5 +28,5 @@ rule dada2_sintax:
         SM_REF_DB_DIR="{params.ref_db_dir}" \
         SM_SINTAX_CUTOFF="{params.cutoff}" \
         SM_THREADS="{threads}" \
-        Rscript {workflow.basedir}/scripts/dada2/03_sintax_assign.R
+        Rscript {workflow.basedir}/scripts/dada2/03_sintax_assign.R > {log} 2>&1
         """

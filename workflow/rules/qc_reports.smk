@@ -10,10 +10,12 @@ rule fastqc:
         zip  = "results/qc/fastqc/{sample}_R{read}_001_fastqc.zip"
     wildcard_constraints:
         read = "[12]"
+    log:
+        "logs/fastqc/{sample}_R{read}.log"
     conda:
         "../envs/qc.yaml"
     shell:
-        "mkdir -p results/qc/fastqc && fastqc {input} --outdir results/qc/fastqc/ --quiet"
+        "mkdir -p results/qc/fastqc && fastqc {input} --outdir results/qc/fastqc/ --quiet > {log} 2>&1"
 
 
 rule multiqc:
@@ -28,6 +30,8 @@ rule multiqc:
         "results/qc/multiqc_report.html"
     params:
         outdir = "results/qc"
+    log:
+        "logs/multiqc.log"
     conda:
         "../envs/qc.yaml"
     shell:
@@ -38,7 +42,8 @@ rule multiqc:
           results/tapirs/03_merged/fastp_merged_reports/ \
           -o {params.outdir} \
           --filename multiqc_report.html \
-          --force --quiet
+          --force --quiet \
+          > {log} 2>&1
         """
 
 
@@ -56,6 +61,8 @@ rule read_summary:
         dada2_seqtab    = "results/dada2/seqtab_asv.csv"
     output:
         summary = "results/read_counts_summary.tsv"
+    log:
+        "logs/read_summary.log"
     conda:
         "../envs/tapirs.yaml"
     script:

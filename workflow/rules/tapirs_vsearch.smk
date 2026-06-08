@@ -9,6 +9,8 @@ rule vsearch_dereplicate:
     output:
         derep        = "results/tapirs/06_dereplicated/{LIBRARIES}/{SAMPLES}.derep.fasta",
         cluster_file = "results/tapirs/08_clusters/derep/{LIBRARIES}/{SAMPLES}.cluster.tsv"
+    log:
+        "logs/vsearch_dereplicate/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
@@ -18,7 +20,8 @@ rule vsearch_dereplicate:
         --minuniquesize {config[VSEARCH_minuniqsize]} \
         --output {output.derep} \
         --fasta_width 0 \
-        --uc {output.cluster_file}"
+        --uc {output.cluster_file} \
+        > {log} 2>&1"
 
 
 rule vsearch_cluster:
@@ -28,6 +31,8 @@ rule vsearch_cluster:
     output:
         cluster      = "results/tapirs/07_clustered/{LIBRARIES}/{SAMPLES}.cluster.fasta",
         cluster_file = "results/tapirs/08_clusters/cluster/{LIBRARIES}/{SAMPLES}.cluster.tsv"
+    log:
+        "logs/vsearch_cluster/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
@@ -39,7 +44,8 @@ rule vsearch_cluster:
         --strand both \
         --centroids {output.cluster} \
         --fasta_width 0 \
-        --uc {output.cluster_file}"
+        --uc {output.cluster_file} \
+        > {log} 2>&1"
 
 
 rule vsearch_denoise:
@@ -49,6 +55,8 @@ rule vsearch_denoise:
     output:
         seqs            = "results/tapirs/07_denoised/{LIBRARIES}/{SAMPLES}.denoise.fasta",
         denoise_results = "results/tapirs/08_clusters/denoise/{LIBRARIES}/{SAMPLES}.denoise.tsv"
+    log:
+        "logs/vsearch_denoise/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
@@ -60,7 +68,8 @@ rule vsearch_denoise:
         --id {config[VSEARCH_unoise_id]} \
         --centroids {output.seqs} \
         --fasta_width 0 \
-        --uc {output.denoise_results}"
+        --uc {output.denoise_results} \
+        > {log} 2>&1"
 
 
 if config['chimera_detection'] == "ref":
@@ -73,6 +82,8 @@ if config['chimera_detection'] == "ref":
         output:
             nonchimeras = "results/tapirs/08_dechimera/{LIBRARIES}/{SAMPLES}.nc.fasta",
             chimeras    = "results/tapirs/08_dechimera/{LIBRARIES}/{SAMPLES}.chimera.fasta"
+        log:
+            "logs/vsearch_uchime_ref/{LIBRARIES}/{SAMPLES}.log"
         conda:
             "../envs/tapirs.yaml"
         shell:
@@ -84,7 +95,8 @@ if config['chimera_detection'] == "ref":
             --mindiffs {config[VSEARCH_mindiffs]} \
             --mindiv {config[VSEARCH_mindiv]} \
             --fasta_width 0 \
-            --nonchimeras {output.nonchimeras}"
+            --nonchimeras {output.nonchimeras} \
+            > {log} 2>&1"
 
 elif config['chimera_detection'] == "denovo":
 
@@ -96,6 +108,8 @@ elif config['chimera_detection'] == "denovo":
         output:
             nonchimeras = "results/tapirs/08_dechimera/{LIBRARIES}/{SAMPLES}.nc.fasta",
             chimeras    = "results/tapirs/08_dechimera/{LIBRARIES}/{SAMPLES}.chimera.fasta"
+        log:
+            "logs/vsearch_uchime3_denovo/{LIBRARIES}/{SAMPLES}.log"
         conda:
             "../envs/tapirs.yaml"
         shell:
@@ -105,7 +119,8 @@ elif config['chimera_detection'] == "denovo":
             --chimeras {output.chimeras} \
             --borderline {output.chimeras} \
             --fasta_width 0 \
-            --nonchimeras {output.nonchimeras}"
+            --nonchimeras {output.nonchimeras} \
+            > {log} 2>&1"
 
 
 rule vsearch_rereplicate:
@@ -113,10 +128,13 @@ rule vsearch_rereplicate:
         nonchimeras = "results/tapirs/08_dechimera/{LIBRARIES}/{SAMPLES}.nc.fasta"
     output:
         rerep = "results/tapirs/09_rereplicated/{LIBRARIES}/{SAMPLES}.rerep.fasta"
+    log:
+        "logs/vsearch_rereplicate/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
         "vsearch \
         --rereplicate {input.nonchimeras} \
         --fasta_width 0 \
-        --output {output.rerep}"
+        --output {output.rerep} \
+        > {log} 2>&1"

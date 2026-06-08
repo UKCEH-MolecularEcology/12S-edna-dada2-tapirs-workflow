@@ -10,12 +10,14 @@ rule dada2_cleanup_prep:
         "results/dada2/ncl_matrix_raw.csv"
     params:
         results_dir = "results/dada2"
+    log:
+        "logs/dada2_cleanup_prep.log"
     conda:
         "../envs/dada2.yaml"
     shell:
         """
         SM_RESULTS_DIR="{params.results_dir}" \
-        Rscript {workflow.basedir}/scripts/dada2/05_make_cleanup_input_from_CLARE.R
+        Rscript {workflow.basedir}/scripts/dada2/05_make_cleanup_input_from_CLARE.R > {log} 2>&1
         """
 
 
@@ -29,10 +31,12 @@ rule dada2_blank_cleanup:
         both = "results/dada2/ncl_cleaned_bothLOD.csv"
     params:
         results_dir = "results/dada2"
+    log:
+        "logs/dada2_blank_cleanup.log"
     conda:
         "../envs/dada2.yaml"
     shell:
         """
         SM_RESULTS_DIR="{params.results_dir}" \
-        Rscript {workflow.basedir}/scripts/dada2/06_blank_cleanup_from_workflow.R
+        Rscript {workflow.basedir}/scripts/dada2/06_blank_cleanup_from_workflow.R > {log} 2>&1
         """

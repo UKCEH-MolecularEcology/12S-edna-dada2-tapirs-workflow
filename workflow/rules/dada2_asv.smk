@@ -23,6 +23,8 @@ rule dada2_asv:
         maxEE_R     = config.get("dada2_maxEE_R", 5)
     threads:
         config.get("dada2_threads", 10)
+    log:
+        "logs/dada2_asv.log"
     conda:
         "../envs/dada2.yaml"
     shell:
@@ -32,5 +34,5 @@ rule dada2_asv:
         SM_THREADS="{threads}" \
         SM_MAXEE_F="{params.maxEE_F}" \
         SM_MAXEE_R="{params.maxEE_R}" \
-        Rscript {workflow.basedir}/scripts/dada2/02_dada2_asv.R
+        Rscript {workflow.basedir}/scripts/dada2/02_dada2_asv.R > {log} 2>&1
         """

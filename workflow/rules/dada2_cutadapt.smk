@@ -18,6 +18,8 @@ rule dada2_cutadapt:
         trim_left  = config.get("trim_left", 0)
     threads:
         config.get("dada2_threads", 10)
+    log:
+        "logs/dada2_cutadapt.log"
     conda:
         "../envs/dada2.yaml"
     shell:
@@ -28,5 +30,5 @@ rule dada2_cutadapt:
         SM_THREADS="{threads}" \
         SM_FUSION_TAG="{params.fusion_tag}" \
         SM_TRIM_LEFT="{params.trim_left}" \
-        Rscript {workflow.basedir}/scripts/dada2/01_cutadapt.R
+        Rscript {workflow.basedir}/scripts/dada2/01_cutadapt.R > {log} 2>&1
         """

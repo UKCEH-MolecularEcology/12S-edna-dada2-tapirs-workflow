@@ -14,6 +14,8 @@ rule mlca:
         coverage = config['MCLA_coverage'],
         majority = config['MLCA_majority'],
         min_hits = config['MLCA_hits']
+    log:
+        "logs/mlca/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     script:
@@ -30,6 +32,8 @@ rule mlca_to_tsv:
         rerep_dir    = "results/tapirs/09_rereplicated"
     output:
         tsv = "results/tapirs/" + config['my_experiment'] + "_blast" + str(config['MLCA_identity']) + "_" + config['cluster_method'] + ".tsv"
+    log:
+        "logs/mlca_to_tsv.log"
     conda:
         "../envs/tapirs.yaml"
     script:
@@ -46,6 +50,8 @@ rule mlca_to_tsv_full_lineage:
         rerep_dir    = "results/tapirs/09_rereplicated"
     output:
         tsv = "results/tapirs/" + config['my_experiment'] + "_blast" + str(config['MLCA_identity']) + "_" + config['cluster_method'] + "_full_lineage.tsv"
+    log:
+        "logs/mlca_to_tsv_full_lineage.log"
     conda:
         "../envs/tapirs.yaml"
     script:

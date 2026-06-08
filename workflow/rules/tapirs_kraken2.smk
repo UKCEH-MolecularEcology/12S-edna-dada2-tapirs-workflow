@@ -9,6 +9,8 @@ rule kraken2:
     output:
         reports = "results/tapirs/kraken2/reports/{LIBRARIES}/{SAMPLES}.txt",
         outputs = "results/tapirs/kraken2/outputs/{LIBRARIES}/{SAMPLES}.krk"
+    log:
+        "logs/kraken2/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
@@ -18,7 +20,8 @@ rule kraken2:
                 --threads {config[kraken2_threads]} \
                 --confidence {config[kraken2_confidence]} \
                 --report {output.reports} \
-                --output {output.outputs}
+                --output {output.outputs} \
+                > {log} 2>&1
         else
             touch {output.reports}
             touch {output.outputs}
@@ -34,6 +37,8 @@ rule taxonomy_to_kraken2:
         taxdump = config['taxdump']
     output:
         kraken2_tax = "results/tapirs/kraken2_tax/{LIBRARIES}/{SAMPLES}.krk.tax.tsv"
+    log:
+        "logs/taxonomy_to_kraken2/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     script:
@@ -50,6 +55,8 @@ rule kraken2_to_tsv:
         rerep_dir    = "results/tapirs/09_rereplicated"
     output:
         tsv = "results/tapirs/" + config['my_experiment'] + "_kraken2_conf" + str(config['kraken2_confidence']).split('.')[1] + "_" + config['cluster_method'] + ".tsv"
+    log:
+        "logs/kraken2_to_tsv.log"
     conda:
         "../envs/tapirs.yaml"
     script:
@@ -66,6 +73,8 @@ rule kraken2_to_tsv_full_lineage:
         rerep_dir    = "results/tapirs/09_rereplicated"
     output:
         tsv = "results/tapirs/" + config['my_experiment'] + "_kraken2_conf" + str(config['kraken2_confidence']).split('.')[1] + "_" + config['cluster_method'] + "_full_lineage.tsv"
+    log:
+        "logs/kraken2_to_tsv_full_lineage.log"
     conda:
         "../envs/tapirs.yaml"
     script:

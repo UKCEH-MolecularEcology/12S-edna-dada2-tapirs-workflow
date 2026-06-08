@@ -11,6 +11,8 @@ rule blast:
     params:
         outformat = "'6 qseqid stitle sacc staxids pident qcovs evalue bitscore'",
         evalue    = float(config["BLAST_min_evalue"])
+    log:
+        "logs/blast/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     shell:
@@ -22,7 +24,8 @@ rule blast:
         -evalue {params.evalue} \
         -max_target_seqs {config[BLAST_max_target_seqs]} \
         -num_threads {config[BLAST_threads]} \
-        -out {output.blast}"
+        -out {output.blast} \
+        > {log} 2>&1"
 
 
 rule taxonomy_to_blast:
@@ -33,6 +36,8 @@ rule taxonomy_to_blast:
         taxdump = config['taxdump']
     output:
         blast_tax = "results/tapirs/blast_tax/{LIBRARIES}/{SAMPLES}.blast.tax.tsv"
+    log:
+        "logs/taxonomy_to_blast/{LIBRARIES}/{SAMPLES}.log"
     conda:
         "../envs/tapirs.yaml"
     script:
