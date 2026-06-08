@@ -12,6 +12,8 @@ library(Biostrings)
 library(tibble)
 library(readr)
 
+ts <- function(...) cat(format(Sys.time(), "[%Y-%m-%d %H:%M:%S]"), ..., "\n")
+
 # -------------------------
 # Locate cutadapt outputs
 # -------------------------
@@ -38,7 +40,7 @@ filtRs <- file.path(filtered_dir, paste0(sample.names, "_R_filt.fastq.gz"))
 # -------------------------
 # Quality filter and trim
 # -------------------------
-cat("Filtering and trimming reads\n")
+ts("STEP 1/6: Filtering and trimming reads")
 out <- filterAndTrim(
   fnFs, filtFs,
   fnRs, filtRs,
@@ -70,9 +72,12 @@ filtRs       <- filtRs[passed]
 # -------------------------
 # Learn errors
 # -------------------------
-cat("Learning error rates\n")
+ts("STEP 2/6: Learning error rates (", length(filtFs), "samples,", threads, "threads)")
+ts("  Learning forward error rates ...")
 errF <- learnErrors(filtFs, nbases = 1e8, multithread = threads)
+ts("  Learning reverse error rates ...")
 errR <- learnErrors(filtRs, nbases = 1e8, multithread = threads)
+ts("  Error rates learned")
 
 # -------------------------
 # Per-sample: dereplicate, denoise, merge
@@ -81,13 +86,16 @@ errR <- learnErrors(filtRs, nbases = 1e8, multithread = threads)
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 
+ts("STEP 3/6: Per-sample dereplicate / denoise / merge (", length(sample.names), "samples)")
+
 mergers          <- vector("list", length(sample.names))
 names(mergers)   <- sample.names
 denoisedF_counts <- setNames(integer(length(sample.names)), sample.names)
 denoisedR_counts <- setNames(integer(length(sample.names)), sample.names)
 
-for (sam in sample.names) {
-  cat("Processing:", sam, "\n")
+for (i in seq_along(sample.names)) {
+  sam <- sample.names[i]
+  ts(sprintf("  [%d/%d] %s", i, length(sample.names), sam))
   derepF <- derepFastq(filtFs[[sam]], verbose = TRUE)
   ddF    <- dada(derepF, err = errF, multithread = threads, verbose = TRUE)
   derepR <- derepFastq(filtRs[[sam]], verbose = TRUE)
@@ -100,11 +108,12 @@ for (sam in sample.names) {
 # -------------------------
 # Sequence table + chimera removal
 # -------------------------
-cat("Making sequence table\n")
+ts("STEP 4/6: Making sequence table")
 seqtab <- makeSequenceTable(mergers)
 write.csv(seqtab, file.path(results_dir, "seqtab_raw.csv"))
+ts("  Sequence table:", nrow(seqtab), "samples,", ncol(seqtab), "ASVs")
 
-cat("Removing chimeras\n")
+ts("STEP 5/6: Removing chimeras")
 seqtab.nochim <- removeBimeraDenovo(
   seqtab,
   method      = "consensus",
@@ -116,7 +125,7 @@ write.csv(seqtab.nochim, file.path(results_dir, "seqtab_nochim.csv"))
 # -------------------------
 # Export ASVs
 # -------------------------
-cat("Writing ASV fasta and lookup\n")
+ts("STEP 6/6: Exporting ASVs —", length(asv_seqs), "sequences after chimera removal")
 asv_seqs <- colnames(seqtab.nochim)
 asv_ids  <- paste0("ASV", seq_along(asv_seqs))
 
@@ -160,4 +169,4 @@ colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "n
 rownames(track) <- sample.names
 write.csv(track, file.path(results_dir, "dada2_read_tracking.csv"))
 
-cat("DADA2 complete\n")
+ts("DADA2 complete")

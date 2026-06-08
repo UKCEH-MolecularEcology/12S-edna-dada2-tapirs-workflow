@@ -13,6 +13,8 @@ library(dplyr)
 library(readr)
 library(stringr)
 
+ts <- function(...) cat(format(Sys.time(), "[%Y-%m-%d %H:%M:%S]"), ..., "\n")
+
 asv_fasta       <- file.path(results_dir, "asvs.nochim.fasta")
 asv_lookup_file <- file.path(results_dir, "asv_lookup.tsv")
 seqtab_asv_file <- file.path(results_dir, "seqtab_asv.rds")
@@ -158,11 +160,12 @@ make_asv_taxonomy_abundance <- function(parsed_df, seqtab_asv, out_file) {
 parsed_results <- list()
 summary_list   <- list()
 
-for (i in seq_len(nrow(reference_dbs))) {
+n_dbs <- nrow(reference_dbs)
+for (i in seq_len(n_dbs)) {
   db_name  <- reference_dbs$db_name[i]
   db_file  <- file.path(reference_dir, reference_dbs$db_file[i])
 
-  cat("Processing database:", db_name, "\n")
+  ts(sprintf("[%d/%d] SINTAX assignment — database: %s", i, n_dbs, db_name))
   db_resolved <- resolve_reference(db_file)
 
   out_tsv <- file.path(results_dir, paste0("asv_sintax_", db_name, ".tsv"))
@@ -198,6 +201,8 @@ for (i in seq_len(nrow(reference_dbs))) {
 
   parsed_results[[db_name]] <- sx_p
   summary_list[[db_name]]   <- summarise_assignments(sx_p, db_name)
+  ts(sprintf("  Done — %s: %d/%d ASVs assigned to species",
+             db_name, summary_list[[db_name]]$assigned_species, nrow(sx_p)))
 }
 
 # =========================
@@ -224,4 +229,4 @@ for (db_name in names(parsed_results)) {
 }
 write_tsv(compare_tbl, file.path(results_dir, "asv_taxonomy_compare.tsv"))
 
-cat("SINTAX complete\n")
+ts("SINTAX complete")
