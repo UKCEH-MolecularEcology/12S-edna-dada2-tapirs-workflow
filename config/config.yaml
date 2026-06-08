@@ -112,9 +112,9 @@ fusion_tag: "yes"
 
 # Number of bases to trim from the 5' end of each read (= primer length).
 # Set to 0 to use cutadapt primer detection instead of fixed trimming.
-trim_left: 18
+trim_left: 18   # set this to 0 if cutadapt is to be used
 
 sintax_cutoff: 0.7
-dada2_threads: 48
+dada2_threads: 64
 dada2_maxEE_F: 2
-dada2_maxEE_R: 5
+dada2_maxEE_R: 2
