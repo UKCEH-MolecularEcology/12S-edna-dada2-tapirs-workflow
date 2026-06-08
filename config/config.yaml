@@ -121,7 +121,7 @@ sintax_databases:
   - MIDORI
   - CLARE
 # Threads per SINTAX job; lower than dada2_threads to allow parallel db runs
-sintax_threads: 16
+sintax_threads: 24
 dada2_threads: 64
 dada2_maxEE_F: 2
 dada2_maxEE_R: 2
