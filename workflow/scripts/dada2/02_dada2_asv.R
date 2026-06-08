@@ -71,31 +71,31 @@ filtRs       <- filtRs[passed]
 # Learn errors
 # -------------------------
 cat("Learning error rates\n")
-errF <- learnErrors(filtFs, multithread = threads)
-errR <- learnErrors(filtRs, multithread = threads)
+errF <- learnErrors(filtFs, nbases = 1e8, multithread = threads)
+errR <- learnErrors(filtRs, nbases = 1e8, multithread = threads)
 
 # -------------------------
-# Dereplicate
+# Per-sample: dereplicate, denoise, merge
+# Processing one sample at a time minimises peak memory use.
 # -------------------------
-cat("Dereplicating reads\n")
-derepFs <- derepFastq(filtFs, verbose = TRUE)
-derepRs <- derepFastq(filtRs, verbose = TRUE)
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
 
-names(derepFs) <- sample.names
-names(derepRs) <- sample.names
+mergers          <- vector("list", length(sample.names))
+names(mergers)   <- sample.names
+denoisedF_counts <- setNames(integer(length(sample.names)), sample.names)
+denoisedR_counts <- setNames(integer(length(sample.names)), sample.names)
 
-# -------------------------
-# DADA2 denoising
-# -------------------------
-cat("Running dada\n")
-dadaFs <- dada(derepFs, err = errF, multithread = threads)
-dadaRs <- dada(derepRs, err = errR, multithread = threads)
-
-# -------------------------
-# Merge pairs
-# -------------------------
-cat("Merging pairs\n")
-mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose = TRUE)
+for (sam in sample.names) {
+  cat("Processing:", sam, "\n")
+  derepF <- derepFastq(filtFs[[sam]], verbose = TRUE)
+  ddF    <- dada(derepF, err = errF, multithread = threads, verbose = TRUE)
+  derepR <- derepFastq(filtRs[[sam]], verbose = TRUE)
+  ddR    <- dada(derepR, err = errR, multithread = threads, verbose = TRUE)
+  mergers[[sam]]          <- mergePairs(ddF, derepF, ddR, derepR, verbose = TRUE)
+  denoisedF_counts[[sam]] <- sum(getUniques(ddF))
+  denoisedR_counts[[sam]] <- sum(getUniques(ddR))
+}
 
 # -------------------------
 # Sequence table + chimera removal
@@ -151,8 +151,8 @@ saveRDS(errR,          file.path(results_dir, "errR.rds"))
 getN <- function(x) sum(getUniques(x))
 track <- cbind(
   out[fnFs_passed, , drop = FALSE],
-  sapply(dadaFs,  getN),
-  sapply(dadaRs,  getN),
+  denoisedF_counts,
+  denoisedR_counts,
   sapply(mergers, getN),
   rowSums(seqtab.nochim)
 )
