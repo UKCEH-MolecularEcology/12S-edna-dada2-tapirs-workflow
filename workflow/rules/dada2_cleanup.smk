@@ -28,7 +28,8 @@ rule dada2_blank_cleanup:
     output:
         lab  = "results/dada2/ncl_cleaned_labLOD.csv",
         site = "results/dada2/ncl_cleaned_siteLOD.csv",
-        both = "results/dada2/ncl_cleaned_bothLOD.csv"
+        both = "results/dada2/ncl_cleaned_bothLOD.csv",
+        long = "results/dada2/ncl_cleaned_long.csv"
     params:
         results_dir = "results/dada2"
     log:
