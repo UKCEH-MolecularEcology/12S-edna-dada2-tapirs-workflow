@@ -41,12 +41,9 @@ classify_sample_type <- function(nm) {
 }
 
 get_site_code <- function(nm) {
-  nm_u <- toupper(nm)
-  m1 <- str_match(nm_u, "_([A-Z]{4})BLANK")
-  if (!is.na(m1[1, 2])) return(m1[1, 2])
-  m2 <- str_match(nm_u, "_R[12]_([A-Z]{4})\\d")
-  if (!is.na(m2[1, 2])) return(m2[1, 2])
-  NA_character_
+  # Site blanks (SPGBLANK, Sylphium_blank) are field/spring blanks with no
+  # per-site match. All samples share a single "global" pool.
+  "global"
 }
 
 sample_info <- tibble(
