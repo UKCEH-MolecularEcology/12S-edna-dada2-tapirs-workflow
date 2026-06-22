@@ -115,6 +115,8 @@ fusion_tag: "yes"
 trim_left: 18   # set this to 0 if cutadapt is to be used
 
 sintax_cutoff: 0.7
+# Path to usearch binary. Run `bash bin/install_usearch.sh` to download it.
+usearch_bin: "bin/usearch"
 # Names must match db_name entries in workflow/scripts/dada2/00_config.R
 sintax_databases:
   - INBO

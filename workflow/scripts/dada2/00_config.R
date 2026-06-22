@@ -42,9 +42,19 @@ dir.create(cutadapt_dir,     showWarnings = FALSE, recursive = TRUE)
 dir.create(filtered_dir,     showWarnings = FALSE, recursive = TRUE)
 dir.create(unzipped_ref_dir, showWarnings = FALSE, recursive = TRUE)
 
-# External tools (must be on PATH or in conda env)
+# External tools
 cutadapt_bin <- "cutadapt"
-usearch_bin  <- "/hdd0/susbus/tools/usearch"
+
+# usearch: prefer SM_USEARCH_BIN env var, then bin/usearch in repo root,
+# then /hdd0/susbus/tools/usearch, then fall back to PATH
+.usearch_candidates <- c(
+  Sys.getenv("SM_USEARCH_BIN", unset = ""),
+  file.path(.script_dir, "..", "..", "..", "bin", "usearch"),
+  "/hdd0/susbus/tools/usearch",
+  "usearch"
+)
+usearch_bin <- Filter(function(p) p != "" && (file.exists(p) || p == "usearch"),
+                      .usearch_candidates)[[1]]
 
 # SINTAX confidence cutoff
 sintax_cutoff <- as.numeric(Sys.getenv("SM_SINTAX_CUTOFF", unset = "0.7"))

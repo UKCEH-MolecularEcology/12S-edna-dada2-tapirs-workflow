@@ -1,12 +1,13 @@
 # ==============================================================================
-# DADA2 — SINTAX TAXONOMY (vsearch --sintax, three databases in parallel)
+# DADA2 — SINTAX TAXONOMY (usearch -sintax, three databases in parallel)
 # Outputs go to results/dada2/
+# Install usearch first: bash bin/install_usearch.sh
 # ==============================================================================
 
 SINTAX_DBS = config.get("sintax_databases", ["INBO", "MIDORI", "CLARE"])
 
 rule dada2_sintax_db:
-    """Run vsearch SINTAX for one reference database (parallelised across databases)."""
+    """Run usearch SINTAX for one reference database (parallelised across databases)."""
     input:
         fasta  = "results/dada2/asvs.nochim.fasta",
         rds    = "results/dada2/seqtab_asv.rds",
@@ -22,7 +23,8 @@ rule dada2_sintax_db:
     params:
         results_dir = "results/dada2",
         ref_db_dir  = config["dada2_ref_db"],
-        cutoff      = config.get("sintax_cutoff", 0.7)
+        cutoff      = config.get("sintax_cutoff", 0.7),
+        usearch_bin = config.get("usearch_bin", "bin/usearch")
     threads:
         config.get("sintax_threads", config.get("dada2_threads", 10))
     log:
@@ -36,6 +38,7 @@ rule dada2_sintax_db:
         SM_SINTAX_CUTOFF="{params.cutoff}" \
         SM_THREADS="{threads}" \
         SM_DB_NAME="{wildcards.db}" \
+        SM_USEARCH_BIN="{params.usearch_bin}" \
         Rscript {workflow.basedir}/scripts/dada2/03a_sintax_run.R > {log} 2>&1
         """
 

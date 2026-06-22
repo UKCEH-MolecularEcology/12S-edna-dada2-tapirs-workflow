@@ -10,4 +10,5 @@ __pycache__/
 *.Rdata
 *.rds
 *.RData
-usearch
+bin/usearch
+bin/usearch_*
