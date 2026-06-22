@@ -1,6 +1,7 @@
 # =========================
 # 02_dada2_asv.R
 # DADA2 pipeline and ASV export
+# Matches Lauren's script structure: list-based dada(), default learnErrors nbases.
 # =========================
 
 .args       <- commandArgs(trailingOnly = FALSE)
@@ -31,13 +32,13 @@ load_chk <- function(name) { ts("  Loading checkpoint:", name); readRDS(chk_path
 # -------------------------
 fnFs <- sort(list.files(
   cutadapt_dir,
-  pattern     = "_R1_001.*\\.(fastq|fq)(\\.gz)?$",
-  full.names  = TRUE
+  pattern    = "_R1_001.*\\.(fastq|fq)(\\.gz)?$",
+  full.names = TRUE
 ))
 fnRs <- sort(list.files(
   cutadapt_dir,
-  pattern     = "_R2_001.*\\.(fastq|fq)(\\.gz)?$",
-  full.names  = TRUE
+  pattern    = "_R2_001.*\\.(fastq|fq)(\\.gz)?$",
+  full.names = TRUE
 ))
 
 if (length(fnFs) == 0 || length(fnRs) == 0) {
@@ -50,10 +51,10 @@ filtFs <- file.path(filtered_dir, paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(filtered_dir, paste0(sample.names, "_R_filt.fastq.gz"))
 
 # -------------------------
-# STEP 1/6: Quality filter and trim
+# STEP 1/5: Quality filter and trim
 # -------------------------
 if (has_chk("filter")) {
-  ts("STEP 1/6: Filtering — loading checkpoint")
+  ts("STEP 1/5: Filtering — loading checkpoint")
   chk          <- load_chk("filter")
   out          <- chk$out
   fnFs_passed  <- chk$fnFs_passed
@@ -61,7 +62,7 @@ if (has_chk("filter")) {
   filtFs       <- chk$filtFs
   filtRs       <- chk$filtRs
 } else {
-  ts("STEP 1/6: Filtering and trimming reads (", length(fnFs), "samples,", threads, "threads)")
+  ts("STEP 1/5: Filtering and trimming reads (", length(fnFs), "samples,", threads, "threads)")
   out <- filterAndTrim(
     fnFs, filtFs,
     fnRs, filtRs,
@@ -92,80 +93,64 @@ if (has_chk("filter")) {
 }
 
 # -------------------------
-# STEP 2/6: Learn errors
+# STEP 2/5: Learn errors
 # -------------------------
 if (has_chk("errors")) {
-  ts("STEP 2/6: Error rates — loading checkpoint")
+  ts("STEP 2/5: Error rates — loading checkpoint")
   errs <- load_chk("errors")
   errF <- errs$errF
   errR <- errs$errR
 } else {
-  ts("STEP 2/6: Learning error rates (", length(filtFs), "samples,", threads, "threads)")
-  ts("  Learning forward error rates ...")
+  ts("STEP 2/5: Learning error rates (", length(filtFs), "samples,", threads, "threads)")
   errF <- learnErrors(filtFs, nbases = 1e8, multithread = threads)
-  ts("  Learning reverse error rates ...")
   errR <- learnErrors(filtRs, nbases = 1e8, multithread = threads)
   ts("  Error rates learned")
   save_chk(list(errF=errF, errR=errR), "errors")
 }
 
 # -------------------------
-# STEP 3/6: Per-sample dereplicate / denoise / merge
+# STEP 3/5: Dereplicate, denoise, merge (all samples at once, matching Lauren's approach)
 # -------------------------
 if (has_chk("denoised")) {
-  ts("STEP 3/6: Denoising — loading checkpoint")
-  dn               <- load_chk("denoised")
-  mergers          <- dn$mergers
-  denoisedF_counts <- dn$denoisedF_counts
-  denoisedR_counts <- dn$denoisedR_counts
+  ts("STEP 3/5: Denoising — loading checkpoint")
+  dn      <- load_chk("denoised")
+  mergers <- dn$mergers
 } else {
-  ts("STEP 3/6: Per-sample dereplicate / denoise / merge (", length(sample.names), "samples)")
+  ts("STEP 3/5: Dereplicating", length(sample.names), "samples")
   names(filtFs) <- sample.names
   names(filtRs) <- sample.names
 
-  mergers          <- vector("list", length(sample.names))
-  names(mergers)   <- sample.names
-  denoisedF_counts <- setNames(integer(length(sample.names)), sample.names)
-  denoisedR_counts <- setNames(integer(length(sample.names)), sample.names)
+  derepFs <- derepFastq(filtFs, verbose = TRUE)
+  derepRs <- derepFastq(filtRs, verbose = TRUE)
+  names(derepFs) <- sample.names
+  names(derepRs) <- sample.names
 
-  for (i in seq_along(sample.names)) {
-    sam <- sample.names[i]
-    ts(sprintf("  [%d/%d] %s", i, length(sample.names), sam))
-    derepF <- derepFastq(filtFs[[sam]], verbose = FALSE)
-    ddF    <- dada(derepF, err = errF, multithread = threads, verbose = FALSE)
-    derepR <- derepFastq(filtRs[[sam]], verbose = FALSE)
-    ddR    <- dada(derepR, err = errR, multithread = threads, verbose = FALSE)
-    mergers[[sam]]          <- mergePairs(ddF, derepF, ddR, derepR, verbose = TRUE)
-    denoisedF_counts[[sam]] <- sum(getUniques(ddF))
-    denoisedR_counts[[sam]] <- sum(getUniques(ddR))
-  }
-  save_chk(list(mergers=mergers,
-                denoisedF_counts=denoisedF_counts,
-                denoisedR_counts=denoisedR_counts), "denoised")
+  ts("STEP 3/5: Running DADA2 (forward)")
+  dadaFs <- dada(derepFs, err = errF, multithread = threads)
+  ts("STEP 3/5: Running DADA2 (reverse)")
+  dadaRs <- dada(derepRs, err = errR, multithread = threads)
+
+  ts("STEP 3/5: Merging pairs")
+  mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose = TRUE)
+
+  save_chk(list(mergers=mergers), "denoised")
 }
 
 # -------------------------
-# STEP 4/6: Sequence table
+# STEP 4/5: Sequence table and chimera removal
 # -------------------------
-if (has_chk("seqtab")) {
-  ts("STEP 4/6: Sequence table — loading checkpoint")
-  seqtab <- load_chk("seqtab")
+if (has_chk("nochim")) {
+  ts("STEP 4/5: Sequence table + chimera removal — loading checkpoint")
+  chk2          <- load_chk("nochim")
+  seqtab        <- chk2$seqtab
+  seqtab.nochim <- chk2$seqtab.nochim
 } else {
-  ts("STEP 4/6: Making sequence table")
+  ts("STEP 4/5: Making sequence table")
   seqtab <- makeSequenceTable(mergers)
   write.csv(seqtab, file.path(results_dir, "seqtab_raw.csv"))
   ts("  Sequence table:", nrow(seqtab), "samples,", ncol(seqtab), "ASVs")
-  save_chk(seqtab, "seqtab")
-}
 
-# -------------------------
-# STEP 5/6: Chimera removal
-# -------------------------
-if (has_chk("nochim")) {
-  ts("STEP 5/6: Chimera removal — loading checkpoint")
-  seqtab.nochim <- load_chk("nochim")
-} else {
-  ts("STEP 5/6: Removing chimeras")
+  ts("STEP 4/5: Removing chimeras")
   seqtab.nochim <- removeBimeraDenovo(
     seqtab,
     method      = "consensus",
@@ -173,13 +158,14 @@ if (has_chk("nochim")) {
     verbose     = TRUE
   )
   write.csv(seqtab.nochim, file.path(results_dir, "seqtab_nochim.csv"))
-  save_chk(seqtab.nochim, "nochim")
+
+  save_chk(list(seqtab=seqtab, seqtab.nochim=seqtab.nochim), "nochim")
 }
 
 # -------------------------
-# STEP 6/6: Export ASVs
+# STEP 5/5: Export ASVs
 # -------------------------
-ts("STEP 6/6: Exporting ASVs —", ncol(seqtab.nochim), "sequences after chimera removal")
+ts("STEP 5/5: Exporting ASVs —", ncol(seqtab.nochim), "sequences after chimera removal")
 
 asv_seqs <- colnames(seqtab.nochim)
 asv_ids  <- paste0("ASV", seq_along(asv_seqs))
@@ -208,21 +194,5 @@ saveRDS(seqtab_asv,    file.path(results_dir, "seqtab_asv.rds"))
 saveRDS(seqtab.nochim, file.path(results_dir, "seqtab_nochim.rds"))
 saveRDS(errF,          file.path(results_dir, "errF.rds"))
 saveRDS(errR,          file.path(results_dir, "errR.rds"))
-
-# -------------------------
-# Read tracking table
-# out rownames are basenames of input paths
-# -------------------------
-getN <- function(x) sum(getUniques(x))
-track <- cbind(
-  out[basename(fnFs_passed), , drop = FALSE],
-  denoisedF_counts,
-  denoisedR_counts,
-  sapply(mergers, getN),
-  rowSums(seqtab.nochim)
-)
-colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
-rownames(track) <- sample.names
-write.csv(track, file.path(results_dir, "dada2_read_tracking.csv"))
 
 ts("DADA2 complete")

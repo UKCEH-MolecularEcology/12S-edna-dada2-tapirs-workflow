@@ -7,7 +7,7 @@
 # ==============================================================================
 
 # Path to flat folder of paired R1/R2 fastq.gz files
-input_dir: "/hdd0/laucoo/arctic_charr/Sequencing_data/LDCHARM_Spring/fastq"
+input_dir: "/hdd0/laucoo/arctic_charr/Sequencing_data/LDCHARM_Spring/fastq_spring"
 
 # Experiment label used in Tapirs output filenames (no spaces)
 my_experiment: "12s_edna"

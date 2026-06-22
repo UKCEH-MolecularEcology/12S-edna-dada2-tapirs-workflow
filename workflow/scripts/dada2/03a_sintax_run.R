@@ -58,16 +58,16 @@ resolve_reference <- function(ref_path) {
   ref_path
 }
 
-run_sintax <- function(vsearch, asv_fa, db_fa, out_tsv, cutoff = 0.7, threads = 8) {
+run_sintax <- function(usearch, asv_fa, db_fa, out_tsv, cutoff = 0.7, threads = 8) {
   args <- c(
-    "--sintax",         asv_fa,
-    "--db",             db_fa,
-    "--tabbedout",      out_tsv,
-    "--strand",         "both",
-    "--sintax_cutoff",  as.character(cutoff),
-    "--threads",        as.character(threads)
+    "-sintax",        asv_fa,
+    "-db",            db_fa,
+    "-tabbedout",     out_tsv,
+    "-strand",        "both",
+    "-sintax_cutoff", as.character(cutoff),
+    "-threads",       as.character(threads)
   )
-  res <- system2(vsearch, args = args, stdout = TRUE, stderr = TRUE)
+  res <- system2(usearch, args = args, stdout = TRUE, stderr = TRUE)
   cat(paste(res, collapse = "\n"), "\n")
 }
 
@@ -158,7 +158,7 @@ out_tsv     <- file.path(results_dir, paste0("asv_sintax_", db_name, ".tsv"))
 
 ts(sprintf("SINTAX — database: %s", db_name))
 run_sintax(
-  vsearch = vsearch_bin,
+  usearch = usearch_bin,
   asv_fa  = asv_fasta,
   db_fa   = db_resolved,
   out_tsv = out_tsv,

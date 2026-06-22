@@ -41,9 +41,15 @@ classify_sample_type <- function(nm) {
 }
 
 get_site_code <- function(nm) {
-  # Site blanks (SPGBLANK, Sylphium_blank) are field/spring blanks with no
-  # per-site match. All samples share a single "global" pool.
-  "global"
+  nm_u <- toupper(nm)
+
+  m1 <- str_match(nm_u, "_([A-Z]{4})BLANK")
+  if (!is.na(m1[1, 2])) return(m1[1, 2])
+
+  m2 <- str_match(nm_u, "_R[12]_([A-Z]{4})\\d")
+  if (!is.na(m2[1, 2])) return(m2[1, 2])
+
+  NA_character_
 }
 
 sample_info <- tibble(
@@ -191,13 +197,16 @@ sample_long <- ncl_long %>%
   )
 
 # ============================================================
-# 8. Remove human and domestic livestock; fish are intentionally kept.
+# 8. Optional exclusion — human and domestic livestock.
+#    Fish are intentionally kept.
+#    Uncomment to activate removal:
 # ============================================================
-exclude_taxa    <- c("Homo_sapiens", "Sus_scrofa", "Canis_lupus",
-                     "Ovis_aries", "Bos_taurus", "Bovidae")
-exclude_pattern <- paste(exclude_taxa, collapse = "|")
-sample_long     <- sample_long %>%
-  filter(!grepl(exclude_pattern, taxonomy, ignore.case = TRUE))
+
+# exclude_taxa    <- c("Homo_sapiens", "Sus_scrofa", "Canis_lupus",
+#                      "Ovis_aries", "Bos_taurus", "Bovidae")
+# exclude_pattern <- paste(exclude_taxa, collapse = "|")
+# sample_long     <- sample_long %>%
+#   filter(!grepl(exclude_pattern, taxonomy, ignore.case = TRUE))
 
 # ============================================================
 # 9. Write cleaned matrices

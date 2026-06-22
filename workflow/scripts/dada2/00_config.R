@@ -44,7 +44,7 @@ dir.create(unzipped_ref_dir, showWarnings = FALSE, recursive = TRUE)
 
 # External tools (must be on PATH or in conda env)
 cutadapt_bin <- "cutadapt"
-vsearch_bin  <- "vsearch"   # replaces usearch for SINTAX
+usearch_bin  <- "/hdd0/susbus/tools/usearch"
 
 # SINTAX confidence cutoff
 sintax_cutoff <- as.numeric(Sys.getenv("SM_SINTAX_CUTOFF", unset = "0.7"))
