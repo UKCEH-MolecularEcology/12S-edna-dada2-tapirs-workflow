@@ -24,12 +24,12 @@ REV_rc <- revcomp(REV)
 
 r1 <- list.files(
   raw_dir,
-  pattern    = "_R1_001.*\\.(fastq|fq)(\\.gz)?$",
+  pattern    = "_R1_(001|cuta_noprim).*\\.(fastq|fq)(\\.gz)?$",
   full.names = TRUE,
   ignore.case = TRUE
 )
 
-r2   <- sub("_R1_001", "_R2_001", r1, fixed = TRUE)
+r2   <- sub("_R1_(001|cuta_noprim)", "_R2_\\1", r1)
 keep <- file.exists(r2)
 
 if (!any(keep)) stop("No matching R1/R2 pairs found in: ", raw_dir)
@@ -38,12 +38,22 @@ r1 <- r1[keep]
 r2 <- r2[keep]
 
 trim_left <- as.integer(Sys.getenv("SM_TRIM_LEFT", unset = "0"))
+primers_already_removed <- tolower(Sys.getenv("SM_PRIMERS_ALREADY_REMOVED", unset = "no")) == "yes"
 
 for (i in seq_along(r1)) {
-  cat("Running cutadapt on:", basename(r1[i]), "\n")
-
   out_r1 <- file.path(cutadapt_dir, basename(r1[i]))
   out_r2 <- file.path(cutadapt_dir, basename(r2[i]))
+
+  if (primers_already_removed) {
+    # Input already had primers stripped upstream (e.g. a prior cutadapt run) —
+    # copy through unchanged instead of trimming again.
+    cat("Primers already removed, copying through:", basename(r1[i]), "\n")
+    file.copy(r1[i], out_r1, overwrite = TRUE)
+    file.copy(r2[i], out_r2, overwrite = TRUE)
+    next
+  }
+
+  cat("Running cutadapt on:", basename(r1[i]), "\n")
 
   if (trim_left > 0) {
     # Fixed 5' trimming — remove primer by position, no primer detection

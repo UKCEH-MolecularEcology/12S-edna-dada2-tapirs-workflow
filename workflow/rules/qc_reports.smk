@@ -2,12 +2,15 @@
 # QC REPORTS — FastQC on raw reads, MultiQC aggregation, read count summary
 # ==============================================================================
 
+_read_tail = R1_SUFFIX.split("_R1_", 1)[1]  # e.g. "001.fastq.gz" or "cuta_noprim.fastq.gz"
+_read_stem = _read_tail.split(".fastq")[0]  # e.g. "001" or "cuta_noprim"
+
 rule fastqc:
     input:
-        config["input_dir"] + "/{sample}_R{read}_001.fastq.gz"
+        config["input_dir"] + "/{sample}_R{read}_" + _read_tail
     output:
-        html = "results/qc/fastqc/{sample}_R{read}_001_fastqc.html",
-        zip  = "results/qc/fastqc/{sample}_R{read}_001_fastqc.zip"
+        html = "results/qc/fastqc/{sample}_R{read}_" + _read_stem + "_fastqc.html",
+        zip  = "results/qc/fastqc/{sample}_R{read}_" + _read_stem + "_fastqc.zip"
     wildcard_constraints:
         read = "[12]"
     log:
@@ -20,7 +23,7 @@ rule fastqc:
 
 rule multiqc:
     input:
-        fastqc      = expand("results/qc/fastqc/{sample}_R{read}_001_fastqc.zip",
+        fastqc      = expand("results/qc/fastqc/{sample}_R{read}_" + _read_stem + "_fastqc.zip",
                              sample=SAMPLES, read=["1", "2"]),
         fastp_trim  = expand("results/tapirs/02_trimmed/fastp_trimmed_reports/{combo}.fastp.json",
                              combo=real_combos),

@@ -7,7 +7,7 @@ _d2_results = "results/dada2"
 
 rule dada2_cutadapt:
     input:
-        r1 = expand(config["input_dir"] + "/{sample}_R1_001.fastq.gz", sample=SAMPLES)
+        r1 = expand(config["input_dir"] + "/{sample}" + R1_SUFFIX, sample=SAMPLES)
     output:
         done = touch("results/dada2/.cutadapt.done")
     params:
@@ -15,7 +15,8 @@ rule dada2_cutadapt:
         results_dir = _d2_results,
         ref_db_dir  = config["dada2_ref_db"],
         fusion_tag = config.get("fusion_tag", "no"),
-        trim_left  = config.get("trim_left", 0)
+        trim_left  = config.get("trim_left", 0),
+        primers_already_removed = config.get("primers_already_removed", "no")
     threads:
         config.get("dada2_threads", 10)
     log:
@@ -30,5 +31,6 @@ rule dada2_cutadapt:
         SM_THREADS="{threads}" \
         SM_FUSION_TAG="{params.fusion_tag}" \
         SM_TRIM_LEFT="{params.trim_left}" \
+        SM_PRIMERS_ALREADY_REMOVED="{params.primers_already_removed}" \
         Rscript {workflow.basedir}/scripts/dada2/01_cutadapt.R > {log} 2>&1
         """

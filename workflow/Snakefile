@@ -32,27 +32,35 @@ config["input_data"] = input_data
 
 # ------------------------------------------------------------------------------
 # DISCOVER SAMPLES FROM INPUT DIRECTORY
+#
+# Tries known R1 naming conventions in turn: standard raw Illumina naming,
+# and pre-primer-trimmed naming (e.g. output of an upstream cutadapt run).
+# Whichever suffix matches is reused below to build R1/R2 paths for the rules.
 # ------------------------------------------------------------------------------
 
-_r1_files = sorted([
-    f for f in glob.glob(os.path.join(_input_dir, "*_R1_001.fastq.gz"))
-    if not os.path.basename(f).startswith("Undetermined")
-])
-if not _r1_files:
+_r1_suffix_candidates = [
+    "_R1_001.fastq.gz",
+    "_R1_001.fastq",
+    "_R1_cuta_noprim.fastq.gz",
+]
+
+_r1_files = []
+R1_SUFFIX = None
+for _suffix in _r1_suffix_candidates:
     _r1_files = sorted([
-        f for f in glob.glob(os.path.join(_input_dir, "*_R1_001.fastq"))
+        f for f in glob.glob(os.path.join(_input_dir, f"*{_suffix}"))
         if not os.path.basename(f).startswith("Undetermined")
     ])
+    if _r1_files:
+        R1_SUFFIX = _suffix
+        break
 
 if not _r1_files:
     raise ValueError(f"No R1 FASTQ files found in {_input_dir}")
 
-SAMPLES = [
-    os.path.basename(f)
-        .replace("_R1_001.fastq.gz", "")
-        .replace("_R1_001.fastq", "")
-    for f in _r1_files
-]
+R2_SUFFIX = R1_SUFFIX.replace("_R1_", "_R2_")
+
+SAMPLES = [os.path.basename(f).replace(R1_SUFFIX, "") for f in _r1_files]
 
 LIBRARIES   = [library_name] * len(SAMPLES)
 real_combos = [f"{library_name}/{s}" for s in SAMPLES]

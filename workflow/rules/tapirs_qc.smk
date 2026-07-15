@@ -5,8 +5,8 @@
 
 rule fastp_trim_reads:
     input:
-        read1 = config['input_data'] + "/{LIBRARIES}/{SAMPLES}_R1_001.fastq.gz",
-        read2 = config['input_data'] + "/{LIBRARIES}/{SAMPLES}_R2_001.fastq.gz"
+        read1 = config['input_data'] + "/{LIBRARIES}/{SAMPLES}" + R1_SUFFIX,
+        read2 = config['input_data'] + "/{LIBRARIES}/{SAMPLES}" + R2_SUFFIX
     output:
         R1trimmed  = "results/tapirs/02_trimmed/{LIBRARIES}/{SAMPLES}.R1.trimmed.fastq",
         R2trimmed  = "results/tapirs/02_trimmed/{LIBRARIES}/{SAMPLES}.R2.trimmed.fastq",

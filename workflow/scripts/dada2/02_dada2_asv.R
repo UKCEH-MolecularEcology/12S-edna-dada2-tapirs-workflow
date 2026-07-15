@@ -32,12 +32,12 @@ load_chk <- function(name) { ts("  Loading checkpoint:", name); readRDS(chk_path
 # -------------------------
 fnFs <- sort(list.files(
   cutadapt_dir,
-  pattern    = "_R1_001.*\\.(fastq|fq)(\\.gz)?$",
+  pattern    = "_R1_(001|cuta_noprim).*\\.(fastq|fq)(\\.gz)?$",
   full.names = TRUE
 ))
 fnRs <- sort(list.files(
   cutadapt_dir,
-  pattern    = "_R2_001.*\\.(fastq|fq)(\\.gz)?$",
+  pattern    = "_R2_(001|cuta_noprim).*\\.(fastq|fq)(\\.gz)?$",
   full.names = TRUE
 ))
 
@@ -45,7 +45,7 @@ if (length(fnFs) == 0 || length(fnRs) == 0) {
   stop("No cutadapt output files found in: ", cutadapt_dir)
 }
 
-sample.names <- sub("_R1_001.*$", "", basename(fnFs))
+sample.names <- sub("_R1_(001|cuta_noprim).*$", "", basename(fnFs))
 
 filtFs <- file.path(filtered_dir, paste0(sample.names, "_F_filt.fastq.gz"))
 filtRs <- file.path(filtered_dir, paste0(sample.names, "_R_filt.fastq.gz"))
@@ -74,7 +74,6 @@ if (has_chk("filter")) {
     compress    = TRUE,
     multithread = threads
   )
-  write.csv(out, file.path(results_dir, "filtering_summary.csv"))
 
   passed <- file.exists(filtFs) & file.exists(filtRs) &
             (file.info(filtFs)$size > 0) & (file.info(filtRs)$size > 0)
@@ -91,6 +90,11 @@ if (has_chk("filter")) {
   save_chk(list(out=out, fnFs_passed=fnFs_passed,
                 sample.names=sample.names, filtFs=filtFs, filtRs=filtRs), "filter")
 }
+
+# Always (re)written, even on a checkpoint resume, since Snakemake declares
+# this as a rule output and deletes it (along with everything else) if it's
+# missing after the job "succeeds".
+write.csv(out, file.path(results_dir, "filtering_summary.csv"))
 
 # -------------------------
 # STEP 2/5: Learn errors
@@ -115,6 +119,8 @@ if (has_chk("denoised")) {
   ts("STEP 3/5: Denoising — loading checkpoint")
   dn      <- load_chk("denoised")
   mergers <- dn$mergers
+  dadaFs  <- dn$dadaFs
+  dadaRs  <- dn$dadaRs
 } else {
   ts("STEP 3/5: Dereplicating", length(sample.names), "samples")
   names(filtFs) <- sample.names
@@ -133,7 +139,7 @@ if (has_chk("denoised")) {
   ts("STEP 3/5: Merging pairs")
   mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose = TRUE)
 
-  save_chk(list(mergers=mergers), "denoised")
+  save_chk(list(mergers=mergers, dadaFs=dadaFs, dadaRs=dadaRs), "denoised")
 }
 
 # -------------------------
@@ -194,5 +200,33 @@ saveRDS(seqtab_asv,    file.path(results_dir, "seqtab_asv.rds"))
 saveRDS(seqtab.nochim, file.path(results_dir, "seqtab_nochim.rds"))
 saveRDS(errF,          file.path(results_dir, "errF.rds"))
 saveRDS(errR,          file.path(results_dir, "errR.rds"))
+
+# -------------------------
+# Read tracking across pipeline steps
+# out (from filterAndTrim) is rownamed by input filename and covers all
+# samples, including any that failed filtering and were dropped from
+# sample.names — merge on sample rather than assuming row order/identity.
+# -------------------------
+getN <- function(x) sum(getUniques(x))
+
+out_df <- data.frame(
+  sample   = sub("_R1_(001|cuta_noprim).*$", "", rownames(out)),
+  input    = out[, "reads.in"],
+  filtered = out[, "reads.out"]
+)
+denoise_df <- data.frame(
+  sample    = sample.names,
+  denoisedF = sapply(dadaFs[sample.names], getN),
+  denoisedR = sapply(dadaRs[sample.names], getN),
+  merged    = sapply(mergers[sample.names], getN)
+)
+nonchim_df <- data.frame(
+  sample  = rownames(seqtab.nochim),
+  nonchim = rowSums(seqtab.nochim)
+)
+
+track <- Reduce(function(x, y) merge(x, y, by = "sample", all = TRUE),
+                 list(out_df, denoise_df, nonchim_df))
+write.csv(track, file.path(results_dir, "dada2_read_tracking.csv"), row.names = FALSE)
 
 ts("DADA2 complete")

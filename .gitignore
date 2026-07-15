@@ -1,5 +1,6 @@
 results*/
 logs/
+staged_input/
 config/samples.tsv
 .snakemake/
 *.log

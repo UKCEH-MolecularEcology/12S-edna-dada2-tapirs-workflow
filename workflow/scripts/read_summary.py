@@ -67,7 +67,7 @@ for path in rerep_fastas:
 # filterAndTrim rownames are the input (cutadapt) file paths
 filt = pd.read_csv(filter_csv, index_col=0)
 for idx, row in filt.iterrows():
-    sample = re.sub(r'_R1_001.*$', '', os.path.basename(str(idx)))
+    sample = re.sub(r'_R1_(001|cuta_noprim).*$', '', os.path.basename(str(idx)))
     records.setdefault(sample, {'sample': sample})
     records[sample]['dada2_after_cutadapt'] = int(row['reads.in'])
     records[sample]['dada2_after_filter']   = int(row['reads.out'])
